@@ -5,7 +5,7 @@
         private readonly TaskCompletionSource<T> completion;
         public BaseCommand()
         {
-            this.completion = new TaskCompletionSource<T>();
+            completion = new TaskCompletionSource<T>();
         }
         public Task<T> WaitForCompletion()
         {

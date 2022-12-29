@@ -88,7 +88,7 @@ namespace StockMarket.Tests
             // Arrange
             var stockMarket = new StockMarketProcessor();
             stockMarket.Open();
-            var sut = new BlockingCollection<Domain.Commands.ICommand>();
+            var sut = new BlockingCollection<ICommand>();
             var orders = new BlockingCollection<long>();
             var tasks = new Task[11];
             var j = -1;
@@ -127,7 +127,7 @@ namespace StockMarket.Tests
             {
                 while (!sut.IsAddingCompleted || sut.Count > 0)
                 {
-                    Domain.Commands.ICommand item;
+                    ICommand item;
                     if (!sut.TryTake(out item)) continue;
                     item.Execute();
                 }

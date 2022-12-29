@@ -13,7 +13,7 @@
         public IEnumerable<Trade> Trades => trades;
         public IEnumerable<Order> Orders => allOrders;
 
-        public StockMarketProcessor(long lastOrderNumber = 0, long lastTradeNumber = 0)
+        public StockMarketProcessor(long lastOrderNumber = 0, long lastTradeNumber = 0, IEnumerable<Order>? orders = null)
         {
             state = new CloseState(this);
             this.lastOrderNumber = lastOrderNumber;
@@ -22,6 +22,11 @@
             trades = new List<Trade>();
             buyOrders = new PriorityQueue<Order, Order>(new MaxComparer());
             sellOrders = new PriorityQueue<Order, Order>(new MinComparer());
+            foreach (var order in orders?? new List<Order>()) 
+            {
+                allOrders.Add(order);
+                enqueueOrder(order);
+            }
         }
         public void Open()
         {
@@ -47,10 +52,15 @@
         }
         internal long enqueueOrder(TradeSide side, decimal price, decimal quantity)
         {
-            if (side == TradeSide.Buy)
+            var order = makeOrder(side, price, quantity);
+            return enqueueOrder(order);
+        }
+        internal long enqueueOrder(Order order)
+        {
+            if (order.Side == TradeSide.Buy)
             {
                 return matchOrder(
-                order: makeOrder(side, price, quantity),
+                order: order,
                 orders: buyOrders,
                 matchingOrders: sellOrders,
                 comparePriceDelegate: (decimal price1, decimal price2) => price1 <= price2
@@ -58,12 +68,13 @@
             }
 
             return matchOrder(
-                order: makeOrder(side, price, quantity),
+                order: order,
                 orders: sellOrders,
                 matchingOrders: buyOrders,
                 comparePriceDelegate: (decimal price1, decimal price2) => price1 >= price2
                 );
         }
+
         private Order makeOrder(TradeSide side, decimal price, decimal quantity)
         {
             Interlocked.Increment(ref lastOrderNumber);
